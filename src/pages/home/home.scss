@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css?family=Pacifico');
+
+page-home {}
+.toolbar-title-md{
+    text-align: center;
+    font-family: 'Pacifico', cursive;
+}
+.ion-content {
+    background-color: transparent;
+  }
+.content-camera {
+    position: fixed;
+    bottom: 10px;
+    width: calc(100% - 32px);
+    left: 16px;
+    .action-sheets-basic-page {
+        .ion-md-share {
+            color: #ED4248;
+        }
+        .ion-md-arrow-dropright-circle {
+            color: #508AE4;
+        }
+        .ion-md-heart-outline {
+            color: #31D55F;
+        }
+        .action-sheet-cancel ion-icon,
+        .action-sheet-destructive ion-icon {
+            color: #757575;
+        }
+    }
+    .btn-camera {
+        width: 30% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        display: inline;
+        font-size: 28px;
+        height: 50px;
+        border-radius: 20px;
+    }
+}
+$background-color: transparent;
+html, body, ion-app, div.nav-decor, .ion-content, .app-root { background-color: transparent !important; }

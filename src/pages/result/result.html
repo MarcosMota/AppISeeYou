@@ -1,0 +1,22 @@
+<ion-header>
+    <ion-navbar>
+        <ion-title>Resultado</ion-title>
+    </ion-navbar>
+</ion-header>
+
+<ion-content padding class="action-sheets-basic-page">
+
+    <ion-card *ngFor="let item of result" onclick="window.open(item.productURL, '_system', 'location=yes'); return false;">
+        <img src="{{item.productImage}}" style="width: 50%;margin-left: auto;margin-right: auto;margin-top: 20px;" />
+            <ion-item id="item.productID">
+            <ion-icon name="cart" item-start large></ion-icon>
+            <h2>{{ item.productName }}</h2>
+            <p>{{ item.productSalePrice }}</p>
+          </ion-item>
+        <!-- <ion-card-content>
+            <ion-card-title>
+                {{ item.productName }} - {{ item.productSalePrice }}
+            </ion-card-title>
+        </ion-card-content> -->
+    </ion-card>
+</ion-content>
