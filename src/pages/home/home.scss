@@ -5,9 +5,9 @@ page-home {}
     text-align: center;
     font-family: 'Pacifico', cursive;
 }
-.ion-content {
-    background-color: transparent;
-  }
+// .ion-content {
+//     background-color: transparent;
+//   }
 .content-camera {
     position: fixed;
     bottom: 10px;
@@ -38,5 +38,5 @@ page-home {}
         border-radius: 20px;
     }
 }
-$background-color: transparent;
-html, body, ion-app, div.nav-decor, .ion-content, .app-root { background-color: transparent !important; }
+// $background-color: transparent;
+// html, body, ion-app, div.nav-decor, .ion-content, .app-root { background-color: transparent !important; }

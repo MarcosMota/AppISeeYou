@@ -1,108 +1,71 @@
 import { ResultPage } from './../result/result';
 import { Component } from '@angular/core';
-import { NavController, LoadingController, AlertController, Loading } from 'ionic-angular';
+import { NavController, LoadingController, AlertController, Loading, ActionSheetController, ToastController } from 'ionic-angular';
 import { Camera, CameraOptions } from '@ionic-native/camera';
 import { AppService } from '../../app/app.service';
 import { CameraPreview, CameraPreviewPictureOptions, CameraPreviewOptions, CameraPreviewDimensions } from '@ionic-native/camera-preview';
+import { FilePath } from '@ionic-native/file-path';
+import { FileTransfer, FileTransferObject, FileUploadOptions } from '@ionic-native/file-transfer';
+import { File, FileEntry } from '@ionic-native/file';
+import { AndroidPermissions } from '@ionic-native/android-permissions';
 
 
 @Component({
     selector: 'page-home',
     templateUrl: 'home.html',
-    providers:[AppService,CameraPreview]
+    providers: [AppService, CameraPreview]
 })
 export class HomePage {
     public base64Image: string;
     loading: Loading;
-
+    lastImage: any;
     constructor(
-       private cameraPreview: CameraPreview,
-       private appService: AppService,
+        private cameraPreview: CameraPreview,
+        private appService: AppService,
         public navCtrl: NavController,
         private camera: Camera,
         private alertCtrl: AlertController,
-        public loadingCtrl: LoadingController) {
+        public loadingCtrl: LoadingController,
+        private transfer: FileTransfer,
+        private file: File,
+        private filePath: FilePath,
+        public actionSheetCtrl: ActionSheetController,
+        public toastCtrl: ToastController,
+        private androidPermissions: AndroidPermissions) {
+        this.androidPermissions.requestPermissions([
+            this.androidPermissions.PERMISSION.READ_EXTERNAL_STORAGE,
+            this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE,
+            this.androidPermissions.PERMISSION.MOUNT_FORMAT_FILESYSTEMS,
+
+        ]);
 
     }
 
     ngAfterViewInit() {
-        const cameraPreviewOpts: CameraPreviewOptions = {
-            x: 0,
-            y: 0,
-            width: window.screen.width,
-            height: window.screen.height,
-            camera: 'rear',
-            tapPhoto: true,
-            previewDrag: true,
-            toBack: true,
-            alpha: 1
-          };
-          
-          // start camera
-          this.cameraPreview.startCamera(cameraPreviewOpts).then(
-            (res) => {
-              console.log(res)
-            },
-            (err) => {
-              console.log(err)
-            });
-            
+
+
     }
 
-    tirarFoto() {      
-        const pictureOpts: CameraPreviewPictureOptions = {
-            width: 1280,
-            height: 1280,
-            quality: 85
-          }
-        this.cameraPreview.takePicture(pictureOpts).then((imageData) => {
-            //this.picture = 'data:image/jpeg;base64,' + imageData;
-             // imageData is either a base64 encoded string or a file URI
-            // If it's base64:
-            this.cameraPreview.hide();
-            let base64Image = 'data:image/jpeg;base64,' + imageData;
-            this.processImage(base64Image);
-          }, (err) => {
-            console.log(err);
-           // this.picture = 'assets/img/test.jpg';
-          });  
-        // const options: CameraOptions = {
-        //     quality: 100,
-        //     destinationType: this.camera.DestinationType.DATA_URL,
-        //     encodingType: this.camera.EncodingType.JPEG,
-        //     mediaType: this.camera.MediaType.PICTURE
-        //   }
-        // this.camera.getPicture(options).then((imageData) => {
-        //     // imageData is either a base64 encoded string or a file URI
-        //     // If it's base64:
-        //     let base64Image = 'data:image/jpeg;base64,' + imageData;
-        //     this.processImage(base64Image);
-            
-            
-        //    }, (err) => {
-        //     // Handle error
-        //     debugger;
-        //    });
-    }
-    
-    processImage(image: any){
-        this.loading = this.loadingCtrl.create({
-            content: "Buscando produtos...",
-            duration: 5000
-        });
-        this.loading.present();
-        this.appService.sendImage(image)
-        .subscribe(response => {
-            this.loading.dismiss();
-            this.cameraPreview.stopCamera();
-            this.navCtrl.push(ResultPage,response);
+    tirarFoto() {
+        const options: CameraOptions = {
+            quality: 100,
+            destinationType: this.camera.DestinationType.FILE_URI,
+            sourceType: this.camera.PictureSourceType.CAMERA,
+            encodingType: this.camera.EncodingType.PNG,
+            saveToPhotoAlbum: true
         }
-            ,
-        error => this.handlerError())
-        
-    }
+        this.camera.getPicture(options).then((imageData) => {
+            // imageData is either a base64 encoded string or a file URI
+            // If it's base64:
+            this.lastImage = imageData;
+            this.uploadImage(imageData);
 
-    handlerError(){
+        }, (err) => {
+            // Handle error
+            debugger;
+        });
+    }
+    handlerError() {
         let alert = this.alertCtrl.create({
             title: 'Problema de envio',
             subTitle: 'Não foi possivel enviar imagem',
@@ -112,12 +75,64 @@ export class HomePage {
                     role: 'cancel',
                     handler: () => {
                         this.loading.dismiss();
-                      this.cameraPreview.show();
+                        //this.cameraPreview.show();
                     }
-                  },]
-          });
-          alert.present();
-          
-          this.cameraPreview.hide();
+                },]
+        });
+        alert.present();
+
+        //this.cameraPreview.hide();
+    }
+
+    private presentToast(text) {
+        let toast = this.toastCtrl.create({
+            message: text,
+            duration: 3000,
+            position: 'top'
+        });
+        toast.present();
+    }
+
+    // Always get the accurate path to your apps folder
+    public pathForImage(img) {
+        if (img === null) {
+            return '';
+        } else {
+            return this.file.dataDirectory + img;
+        }
+    }
+
+    public uploadImage(imageFileUri) {
+        // this.error = null;
+        this.loading = this.loadingCtrl.create({
+            content: 'Buscando produtos...'
+        });
+
+        this.loading.present();
+
+
+        this.file.resolveLocalFilesystemUrl(imageFileUri)
+            .then(entry => (<FileEntry>entry).file(file => {
+                this.readFile(file);
+            })).catch(err => console.log(err));
+    }
+
+    private readFile(file: any) {
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const formData = new FormData();
+            const imgBlob = new Blob([reader.result], { type: file.type });
+            formData.append('file', imgBlob, file.name);
+            this.appService.postData(formData).then(response => {
+                this.loading.dismissAll()
+                this.presentToast('Image enviada com sucesso.');
+            }).catch(error => {
+                console.log(error)
+                this.loading.dismissAll()
+                this.presentToast('Problemas ao enviar.');
+            });
+        };
+        reader.readAsArrayBuffer(file);
     }
 }

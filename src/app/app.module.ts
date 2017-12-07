@@ -8,6 +8,13 @@ import { Camera } from '@ionic-native/camera';
 import { HttpModule } from '@angular/http';
 import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
+import { CameraPreview } from '@ionic-native/camera-preview';
+import { AppService } from './app.service';
+import { File } from '@ionic-native/file';
+import { FileTransfer } from '@ionic-native/file-transfer';
+import { FilePath } from '@ionic-native/file-path';
+import { HTTP } from '@ionic-native/http';
+import { AndroidPermissions } from '@ionic-native/android-permissions';
 
 @NgModule({
   declarations: [
@@ -27,6 +34,13 @@ import { HomePage } from '../pages/home/home';
     HomePage
   ],
   providers: [
+    AndroidPermissions,
+    HTTP,
+    File,
+    FilePath,
+    FileTransfer,
+    AppService,
+    CameraPreview,
     StatusBar,
     Camera,    
     SplashScreen,
